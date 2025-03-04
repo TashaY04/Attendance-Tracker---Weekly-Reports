@@ -1,0 +1,105 @@
+let students = [];
+let attendance = {};
+
+document.getElementById('add-student-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    let studentName = document.getElementById('student-name').value.trim();
+    
+    if (studentName === '') {
+        document.getElementById('student-name').classList.add('is-invalid');
+        document.getElementById('student-name-error').classList.remove('d-none');
+        return;
+    }
+
+    if (students.find((s) => s.name === studentName)) {
+        alert('Student already exists.');
+        return;
+    }
+
+    students.push({ name: studentName, attendance: {} });
+    attendance[studentName] = {};
+    renderStudentList();
+    
+    document.getElementById('student-name').value = '';
+    document.getElementById('student-name').classList.remove('is-invalid');
+    document.getElementById('student-name-error').classList.add('d-none');
+});
+
+function renderStudentList() {
+    let studentListBody = document.getElementById('student-list-body');
+    studentListBody.innerHTML = '';
+
+    students.forEach((student) => {
+        let row = document.createElement('tr');
+        let nameCell = document.createElement('td');
+        nameCell.textContent = student.name;
+
+        let actionsCell = document.createElement('td');
+        let presentButton = document.createElement('button');
+        presentButton.textContent = 'View Attendance';
+        presentButton.classList.add('btn', 'btn-primary');
+        
+        presentButton.addEventListener('click', () => {
+            viewAttendance(student.name);
+        });
+
+        actionsCell.appendChild(presentButton);
+        row.appendChild(nameCell);
+        row.appendChild(actionsCell);
+        studentListBody.appendChild(row);
+    });
+}
+
+document.getElementById('mark-attendance-button').addEventListener('click', () => {
+    let selectedDay = document.getElementById('day-select').value;
+    let selectedPeriod = document.getElementById('period-select').value;
+    let selectedStudent = prompt("Enter the name of the student");
+
+    if (selectedStudent in attendance) {
+        if (!(selectedDay in attendance[selectedStudent])) {
+            attendance[selectedStudent][selectedDay] = {};
+        }
+        attendance[selectedStudent][selectedDay][selectedPeriod] = 'present';
+        alert("Attendance marked successfully");
+    } else {
+        alert("Student not found");
+    }
+});
+
+function viewAttendance(studentName) {
+    let attendanceReport = '';
+
+    for (let day in attendance[studentName]) {
+        attendanceReport += day + ': ';
+        for (let period in attendance[studentName][day]) {
+            attendanceReport += 'Period ' + period + ', ';
+        }
+        attendanceReport = attendanceReport.slice(0, -2) + '\n';
+    }
+
+    alert(attendanceReport);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    let weeklyReportButton = document.querySelector('[data-bs-toggle="modal"]');
+
+    weeklyReportButton.addEventListener('click', () => {
+        let weeklyReportBody = document.getElementById('weekly-report-body');
+        weeklyReportBody.innerHTML = '';
+
+        students.forEach((student) => {
+            let report = '';
+            for (let day in attendance[student.name]) {
+                report += day + ': ';
+                for (let period in attendance[student.name][day]) {
+                    report += 'Period ' + period + ', ';
+                }
+                report = report.slice(0, -2) + '<br>';
+            }
+            
+            let reportRow = document.createElement('p');
+            reportRow.innerHTML = student.name + '<br>' + report;
+            weeklyReportBody.appendChild(reportRow);
+        });
+    });
+});
